@@ -1,0 +1,4 @@
+* text=auto
+
+# Use LF because apparently Windows exsists
+* text eol=lf
