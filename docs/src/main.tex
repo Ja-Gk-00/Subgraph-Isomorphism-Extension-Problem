@@ -1,0 +1,124 @@
+\documentclass{article}
+%Przykład bazuje na example project overleaf [article]
+% Language setting
+% Polski
+\usepackage[utf8]{inputenc}
+\usepackage[MeX]{polski}
+\usepackage{indentfirst}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{amsmath}
+
+% Set page size and margins
+% Replace `letterpaper' with`a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage[]{hyperref}
+
+\usepackage{svg}
+\usepackage{dirtree}
+\usepackage{algpseudocode}
+
+\usepackage[showframe]{geometry}
+
+\title{Teoria algorytmów i obliczeń - sprawozdanie}
+\author{Antoni Adaszkiewicz & Jan Gąska & Jacek Kulma & Mateusz Raczyński}
+
+\begin{document}
+
+\begin{titlepage}
+    \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+	\center
+    \includesvg[width=\textwidth,inkscapelatex=false ]{logo-mini.svg}
+    \\[0.3cm]
+    \HRule\\[0.3cm]
+	{\huge\textbf{Teoria algorytmów i obliczeń - sprawozdanie}\\[0.15cm] 
+    \HRule\\[2.5cm]
+    \begin{center}
+        \large
+            Antoni Adaszkiewicz \\
+            Jan Gąska \\
+            Jacek Kulma \\
+            Mateusz Raczyński
+    \end{center}
+	\vfill\vfill\vfill
+	{\large \today} \\
+	\vfill
+\end{titlepage}
+
+\tableofcontents
+
+\newpage
+\section{Abstrakt}
+
+\section{Opis problemu}
+
+\section{Rozmiar grafu}
+
+\subsection{Definicja}
+
+\noindent
+Przyjęta została następująca definicja \textit{rozmiaru} grafu $G =(V, E)$
+
+\begin{equation}
+    |G| = |V| + |E| 
+\end{equation}
+
+Definicja ta jest powszechnie stosowana w kontekście złożoności obliczeniowej problemów grafowych (\cite{size}). Użycie rzędu ($|V|$) bądź rozmiaru w kontekście matematycznym ($|E|$) do zdefiniowania \textit{rozmiaru} grafu  oznaczałoby, że graf docelowy może być zwiększany o dowolną liczbę krawędzi/wierzchołków bez zwiększenia rozmiaru (co mija się z intuicją).
+
+\subsection{Algorytm}
+
+\noindent
+Poniżej przedstawiony został algorytm do obliczania rozmiaru grafu $G$ reprezentowanego przez macierz sąsiedztwa $M_{G}$:
+\\
+\begin{algorithmic}
+\Function{GetSize}{$M_{G}[\;][\;]$}
+    \State {$|V|$ $\gets$ {$GetRowCount(M_{G})$}}
+    \State {$Size$ $\gets$ {$|V|$}}
+    \For{$i \gets 1$ to $N$}
+        \For{$j \gets 1$ to $N$}
+            \State {$Size$ $\gets$ {$Size+ M_{G}[i][j]$}}
+        \EndFor
+    \EndFor
+\State \Return {$Sum$}
+\end{algorithmic}
+
+\noindent
+\\
+Złożoność czasowa tego algorytmu to $O(|V|^2)$.
+
+\section{Metryka}
+\subsection{Definicja}
+\subsection{Algorytm}
+\subsection{Algorytm aproksymujący}
+
+\section{Znajdowanie grafu izomorficznego}
+\subsection{Definicja}
+\subsection{Algorytm}
+\subsection{Algorytm aproksymujący}
+
+\section{Testy obliczeniowe}
+\subsection{Rozmiar grafu}
+\subsection{Metryka}
+\subsection{Znajdowanie grafu izomorficznego}
+
+\section{Opis techniczny}
+\subsection{Specyfikacja}
+\subsection{Budowanie i uruchamianie}
+
+\section{Wnioski}
+
+\renewcommand{\refname}{Bibliografia}
+\begin{thebibliography}{9}
+\bibitem{size}
+\url{https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)}
+
+\end{thebibliography}
+\end{document}
