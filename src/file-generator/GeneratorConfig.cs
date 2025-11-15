@@ -31,7 +31,7 @@ public record GeneratorConfig
     /// <summary>
     /// The file path where the output will be saved.
     /// </summary>
-    public string OutputPath { get; init; } = Path.Combine(Directory.GetCurrentDirectory(), "graphs.txt");
+    public string OutputPath { get; init; } = Path.Combine(Directory.GetCurrentDirectory(), "graphs_example.txt");
 
     /// <summary>
     /// If true, generates an undirected graph (symmetric matrix).
