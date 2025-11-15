@@ -169,7 +169,7 @@ public static class ArgumentParser
         string programName = Path.GetFileNameWithoutExtension(processName);
 
         Console.WriteLine("Graph Generator Usage:");
-        Console.WriteLine($"  .\\{programName} <n1> <n2> [options]");
+        Console.WriteLine($"  {programName} <n1> <n2> [options]");
         Console.WriteLine();
         Console.WriteLine("Required Arguments:");
         Console.WriteLine("  n1                Number of vertices for the first graph.");
@@ -188,6 +188,6 @@ public static class ArgumentParser
         Console.WriteLine("  --help, -h        Show this help message.");
         Console.WriteLine();
         Console.WriteLine("Example:");
-        Console.WriteLine($"  .\\{programName} 10 10 --isomorphic --density 0.25 --ngraphs 5 --output data/test_set.txt");
+        Console.WriteLine($"  {programName} 10 10 --isomorphic --density 0.25 --ngraphs 5 --output data/test_set.txt");
     }
 }
