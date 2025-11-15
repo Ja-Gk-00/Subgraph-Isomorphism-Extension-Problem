@@ -176,7 +176,8 @@ public static class ArgumentParser
         Console.WriteLine("  n2                Number of vertices for the second graph.");
         Console.WriteLine();
         Console.WriteLine("Options:");
-        Console.WriteLine("  --isomorphic      Generate G2 as an isomorphism of G1 (requires n1=n2).");
+        Console.WriteLine("  --isomorphic      Generate G2 as an isomorphism of G1. If n1!=n2, smaller graph is an");
+        Console.WriteLine("                    isomorphic subgraph of the larger graph.");
         Console.WriteLine("  --directed        Generate directed graphs (default is undirected).");
         Console.WriteLine("  --allow-loops     Allow self-loops (edges on the matrix diagonal).");
         Console.WriteLine("  --density <0-1>   Set graph density (default: 0.4).");

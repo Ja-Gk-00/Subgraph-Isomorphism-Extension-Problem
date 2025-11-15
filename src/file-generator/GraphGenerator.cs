@@ -171,4 +171,35 @@ public class GraphGenerator
             writer.WriteLine(rowBuilder.ToString());
         }
     }
+
+    /// <summary>
+    /// Extracts an induced subgraph by taking the first 'newSize' vertices.
+    /// This is the "cut" operation.
+    /// </summary>
+    /// <param name="originalMatrix">The original graph matrix.</param>
+    /// <param name="newSize">The size (N) of the subgraph to extract.</param>
+    /// <returns>A new N x N adjacency matrix (the top-left corner).</returns>
+    public int[,] GetInducedSubgraph(int[,] originalMatrix, int newSize)
+    {
+        int originalSize = originalMatrix.GetLength(0);
+        if (newSize > originalSize)
+        {
+            throw new ArgumentException("New size cannot be larger than the original matrix.", nameof(newSize));
+        }
+        if (newSize < 0)
+        {
+            throw new ArgumentException("New size must be non-negative.", nameof(newSize));
+        }
+
+        int[,] subMatrix = new int[newSize, newSize];
+        for (int i = 0; i < newSize; i++)
+        {
+            for (int j = 0; j < newSize; j++)
+            {
+                // Simply copy the top-left N x N corner
+                subMatrix[i, j] = originalMatrix[i, j];
+            }
+        }
+        return subMatrix;
+    }
 }

@@ -41,12 +41,6 @@ public class Program
         {
             var generator = new GraphGenerator(config.Seed);
 
-            if (config.Isomorphic && config.N1 != config.N2)
-            {
-                Console.Error.WriteLine("ERROR: Cannot generate isomorphic graphs of different sizes.");
-                return;
-            }
-
             string? directory = Path.GetDirectoryName(config.OutputPath);
             string baseFilename = Path.GetFileNameWithoutExtension(config.OutputPath);
             string extension = Path.GetExtension(config.OutputPath);
@@ -70,19 +64,43 @@ public class Program
                 string currentOutputPath = Path.Combine(fullDirectory, currentFilename);
                 Console.WriteLine($"Generating file {i + 1}/{config.NGraphs}: {currentOutputPath}...");
 
-                int[,] graph1 = generator.GenerateAdjacencyMatrix(
-                    config.N1, config.Density, config.MaxWeight,
-                    config.Undirected, config.AllowLoops);
-
+                int[,] graph1;
                 int[,] graph2;
 
                 if (config.Isomorphic)
                 {
-                    int[] permutation = generator.GeneratePermutation(config.N1);
-                    graph2 = generator.CreateIsomorphicGraph(graph1, permutation);
+                    // Check for larger graph
+                    int largerSize = Math.Max(config.N1, config.N2);
+                    int smallerSize = Math.Min(config.N1, config.N2);
+
+                    // Generate the larger graph first
+                    int[,] largerGraph = generator.GenerateAdjacencyMatrix(
+                        largerSize, config.Density, config.MaxWeight,
+                        config.Undirected, config.AllowLoops);
+
+                    // Extract the smaller graph as an induced subgraph
+                    int[,] subgraph = generator.GetInducedSubgraph(largerGraph, smallerSize);
+                    int[] permutation = generator.GeneratePermutation(smallerSize);
+                    int[,] smallerGraph = generator.CreateIsomorphicGraph(subgraph, permutation);
+
+                    // Assign graphs based on original sizes
+                    if (config.N1 == largerSize)
+                    {
+                        graph1 = largerGraph;
+                        graph2 = smallerGraph;
+                    }
+                    else
+                    {
+                        graph1 = smallerGraph;
+                        graph2 = largerGraph;
+                    }
                 }
                 else
                 {
+                    graph1 = generator.GenerateAdjacencyMatrix(
+                        config.N1, config.Density, config.MaxWeight,
+                        config.Undirected, config.AllowLoops);
+
                     graph2 = generator.GenerateAdjacencyMatrix(
                         config.N2, config.Density, config.MaxWeight,
                         config.Undirected, config.AllowLoops);

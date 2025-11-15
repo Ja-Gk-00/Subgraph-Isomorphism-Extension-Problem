@@ -20,7 +20,8 @@ public record GeneratorConfig
     /// <summary>
     /// If true, the second graph will be generated
     /// as an isomorphic permutation of the first graph.
-    /// This requires N1 == N2.
+    /// If N1 != N2, smaller graph is an isomorphoc subgraph
+    /// of the larger graph.
     /// </summary>
     public bool Isomorphic { get; init; } = false;
 
