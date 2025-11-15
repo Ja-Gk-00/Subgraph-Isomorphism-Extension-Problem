@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 /// <summary>
 /// A simple, custom parser for command-line arguments
@@ -40,16 +41,12 @@ public static class ArgumentParser
             if (arg == "--help" || arg == "-h")
             {
                 PrintHelp();
-                // We throw an exception to stop execution.
-                // In a real app, you might use a different flow (e.g., return null).
                 throw new OperationCanceledException("Help requested.");
             }
 
             if (arg.StartsWith("--"))
             {
                 // This is an optional argument
-                // We use 'ref i' to allow the helper method to advance
-                // the loop index if it consumes the next argument as a value.
                 config = ParseOptionalArgument(ref i, args, config);
             }
             else
@@ -90,8 +87,6 @@ public static class ArgumentParser
     {
         string key = args[i];
 
-        // This is a "switch expression" (modern C#)
-        // It modifies the config record using the 'with' keyword.
         return key switch
         {
             // --- Flags (no value) ---
@@ -100,7 +95,7 @@ public static class ArgumentParser
             "--directed" => currentConfig with { Undirected = false },
 
             // --- Arguments with values ---
-            "--output" => currentConfig with { OutputPath = GetValue(ref i, args) },
+            "--output" => currentConfig with { OutputPath = EnsureExtension(GetValue(ref i, args), ".txt") },
             "--extra-data" => currentConfig with { ExtraData = GetValue(ref i, args) },
             "--density" => currentConfig with { Density = GetDouble(ref i, args, key) },
             "--max-weight" => currentConfig with { MaxWeight = GetInt(ref i, args, key) },
@@ -145,13 +140,36 @@ public static class ArgumentParser
         throw new ArgumentException($"Invalid double value for {key}: '{value}'");
     }
 
+    private static string EnsureExtension(string path, string extension)
+    {
+        return Path.ChangeExtension(path, extension);
+    }
+
     /// <summary>
     /// Prints a help message to the console.
     /// </summary>
     public static void PrintHelp()
     {
+        string processName;
+        try
+        {
+            // get processname
+            processName = Environment.ProcessPath ?? "file-generator.exe";
+
+            if (Path.GetFileNameWithoutExtension(processName).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
+            {
+                processName = Assembly.GetEntryAssembly()?.Location ?? "file-generator.dll";
+            }
+        }
+        catch
+        {
+            processName = "file-generator"; // fallback
+        }
+
+        string programName = Path.GetFileNameWithoutExtension(processName);
+
         Console.WriteLine("Graph Generator Usage:");
-        Console.WriteLine("  dotnet run -- <n1> <n2> [options]");
+        Console.WriteLine($"  .\\{programName} <n1> <n2> [options]");
         Console.WriteLine();
         Console.WriteLine("Required Arguments:");
         Console.WriteLine("  n1                Number of vertices for the first graph.");
@@ -170,6 +188,6 @@ public static class ArgumentParser
         Console.WriteLine("  --help, -h        Show this help message.");
         Console.WriteLine();
         Console.WriteLine("Example:");
-        Console.WriteLine("  dotnet run -- 10 10 --isomorphic --density 0.25 --ngraphs 5 --output data/test_set.txt");
+        Console.WriteLine($"  .\\{programName} 10 10 --isomorphic --density 0.25 --ngraphs 5 --output data/test_set.txt");
     }
 }
