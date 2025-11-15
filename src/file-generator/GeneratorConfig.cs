@@ -1,9 +1,7 @@
-﻿using System.IO; // Used for Path
+﻿using System.IO;
 
 /// <summary>
 /// Holds all settings for the graph generation process.
-/// In a real application, these properties would be populated
-/// from command-line arguments (e.g., using System.CommandLine).
 /// </summary>
 public record GeneratorConfig
 {
@@ -12,12 +10,12 @@ public record GeneratorConfig
     /// <summary>
     /// The number of vertices for the first graph.
     /// </summary>
-    public int N1 { get; init; } = 5;
+    public int N1 { get; init; }
 
     /// <summary>
     /// The number of vertices for the second graph.
     /// </summary>
-    public int N2 { get; init; } = 5;
+    public int N2 { get; init; }
 
     /// <summary>
     /// If true, the second graph will be generated

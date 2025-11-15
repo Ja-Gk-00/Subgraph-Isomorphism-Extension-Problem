@@ -9,7 +9,6 @@ public class Program
         try
         {
             // --- 1. Parse Arguments ---
-            // Pass the command-line args directly to our parser
             config = ArgumentParser.Parse(args);
         }
         catch (ArgumentException ex)
@@ -19,12 +18,12 @@ public class Program
             Console.Error.WriteLine($"Argument Error: {ex.Message}");
             Console.ResetColor();
             Console.WriteLine("Use --help for more information.");
-            return; // Exit
+            return;
         }
         catch (OperationCanceledException)
         {
             // This is thrown by PrintHelp() to stop execution
-            return; // Exit gracefully
+            return;
         }
         catch (Exception ex)
         {
@@ -36,9 +35,6 @@ public class Program
         }
 
         // --- 2. Run Main Program Logic ---
-        // (This code is the same as before, but it now uses the 'config'
-        // object populated from the command line)
-
         Console.WriteLine($"Starting batch generation of {config.NGraphs} file(s)...");
 
         try

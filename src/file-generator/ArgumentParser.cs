@@ -21,7 +21,7 @@ public static class ArgumentParser
     /// <returns>A populated GeneratorConfig record.</returns>
     /// <exception cref="ArgumentException">Thrown if arguments are invalid or missing.</exception>
     public static GeneratorConfig Parse(string[] args)
-    { // <-- Poprawiona linia, __ zostało zastąpione przez {
+    {
         // Start with the default configuration
         var config = new GeneratorConfig();
         var positionalArgs = new List<string>();
