@@ -1,129 +1,68 @@
-internal sealed class SIEPException : Exception
-{
-    public SIEPException()
-    { }
-
-    public SIEPException(string message)
-        : base(message)
-    { }
-
-    public SIEPException(string message, Exception innerException)
-        : base(message, innerException)
-    { }
-}
-
 internal class Graph
 {
-    private int[,] adjMatrix;
-    public int VertexCount
-    {
-        get
-        {
-            return adjMatrix.GetLength(0);
-        }
-    }
+    private int[,] adj;
 
+    public int VertexCount => adj.GetLength(0);
     public int EdgeCount { get; private set; }
 
-    public Graph(int[,] adjMatrix)
+    public Graph(int[,] matrix)
     {
-        this.adjMatrix = adjMatrix;
-        Update();
+        adj = matrix;
+        EdgeCount = 0;
+        foreach (var w in matrix) EdgeCount += w;
     }
 
-    private void Update()
+    public Graph(int size)
     {
-        foreach (int elem in adjMatrix)
-        {
-            EdgeCount += elem;
-        }
-    }
-}
-
-internal static class GraphParser
-{
-    public static IReadOnlyList<Graph> ParseGraphs(FileInfo file)
-    {
-        var contents = File.ReadLines(file.FullName);
-        var msg = $"Input file {file.Name}:";
-
-        if (!contents.Any())
-        {
-            throw new SIEPException($"{msg} empty");
-        }
-
-        var graphs = new List<Graph>();
-        var lines = contents.GetEnumerator();
-
-        for (int i = 0; i < 2; i++)
-        {
-            if (!lines.MoveNext())
-            {
-                throw new SIEPException($"{msg} enough data");
-            }
-
-            var adjMatrix = ParseAdjMatrix(lines, msg);
-            graphs.Add(new Graph(adjMatrix));
-        }
-
-        if (lines.MoveNext() && string.IsNullOrWhiteSpace(lines.Current))
-        {
-            throw new SIEPException($"{msg} read all but still some data left");
-        }
-
-        return graphs;
+        adj = new int[size, size];
+        EdgeCount = 0;
     }
 
-    private static int[,] ParseAdjMatrix(IEnumerator<string> lines, string msg)
+    public void AddVertex()
     {
-        int vertexCount;
-        try
-        {
-            vertexCount = int.Parse(lines.Current);
-        }
-        catch (FormatException exc)
-        {
-            throw new SIEPException($"{msg} can't parse vertex count", exc);
-        }
+        int n = VertexCount;
+        var newAdj = new int[n + 1, n + 1];
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                newAdj[i, j] = adj[i, j];
+        adj = newAdj;
+    }
 
-        if (vertexCount <= 0)
-        {
-            throw new SIEPException($"{msg} invalid vertex count: {vertexCount}");
-        }
+    public void AddEdge(int u, int v, int weight)
+    {
+        adj[u, v] += weight;
+        adj[v, u] += weight;
+        EdgeCount += 2 * weight;
+    }
 
-        int[,] adjMatrix = new int[vertexCount, vertexCount];
+    public int Get(int i, int j) => adj[i, j];
+    public int Degree(int i)
+    {
+        int d = 0;
+        for (int j = 0; j < VertexCount; j++) d += adj[i, j];
+        return d;
+    }
 
-        for (int i = 0; i < vertexCount; i++)
+    public Graph Clone()
+    {
+        int[,] clone = new int[VertexCount, VertexCount];
+        for (int i = 0; i < VertexCount; i++)
+            for (int j = 0; j < VertexCount; j++)
+                clone[i, j] = adj[i, j];
+        return new Graph(clone);
+    }
+
+    public void PrintMatrix()
+    {
+        System.Console.WriteLine(VertexCount);
+        for (int i = 0; i < VertexCount; i++)
         {
-            if (!lines.MoveNext())
+            for (int j = 0; j < VertexCount; j++)
             {
-                throw new SIEPException($"{msg} missing rows");
+                System.Console.Write(adj[i, j]);
+                if (j < VertexCount - 1) System.Console.Write(" ");
             }
-
-            var line = lines.Current.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (line.Length != vertexCount)
-            {
-                throw new SIEPException($"{msg} missing columns");
-            }
-
-            for (int j = 0; j < vertexCount; j++)
-            {
-                try
-                {
-                    adjMatrix[i, j] = int.Parse(line[j]);
-                }
-                catch (FormatException exc)
-                {
-                    throw new SIEPException($"{msg} can't parse at {i},{j}", exc);
-                }
-
-                if (adjMatrix[i, j] < 0)
-                {
-                    throw new SIEPException($"{msg} bad value at {i},{j} - {adjMatrix[i, j]}");
-                }
-            }
+            System.Console.WriteLine();
         }
-
-        return adjMatrix;
     }
 }
