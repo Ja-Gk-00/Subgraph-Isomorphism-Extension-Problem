@@ -4,6 +4,7 @@ internal class Graph
 
     public int VertexCount => adj.GetLength(0);
     public int EdgeCount { get; private set; }
+    public int Size => VertexCount + EdgeCount;
 
     public Graph(int[,] matrix)
     {
@@ -41,6 +42,30 @@ internal class Graph
         int d = 0;
         for (int j = 0; j < VertexCount; j++) d += adj[i, j];
         return d;
+    }
+    
+    public int LoopCount(int vertex) => Get(vertex, vertex);
+
+    public IEnumerable<(int, int)> YieldOutNeighboursWithCount(int vertex)
+    {
+        for (var neighbour = 0; neighbour < VertexCount; neighbour++)
+        {
+            if (neighbour != vertex)
+            {
+                yield return (neighbour, Get(vertex, neighbour));
+            }
+        }
+    }
+    
+    public IEnumerable<(int, int)> YieldInNeighboursWithCount(int vertex)
+    {
+        for (var neighbour = 0; neighbour < VertexCount; neighbour++)
+        {
+            if (neighbour != vertex)
+            {
+                yield return (neighbour, Get(neighbour, vertex));
+            }
+        }
     }
 
     public Graph Clone()
