@@ -15,7 +15,7 @@ internal static class GraphDistance
         var kernelAtoB = featureA.CalculateKernel(featureB);
         
         // kernel to pseudometric formula
-        return Math.Sqrt(1 - kernelAtoB / (Math.Sqrt(kernelAtoA * kernelBtoB)));
+        return Math.Sqrt(1 - kernelAtoB / (Math.Sqrt(kernelAtoA) * Math.Sqrt(kernelBtoB)));
     }
 
     private static (WlFeatureMap, WlFeatureMap) MakeWlFeatureMaps(Graph graphA, Graph graphB, int iterations = 4)
