@@ -18,14 +18,12 @@ public class Program
 
             if (options.Size)
             {
-                Console.WriteLine($"Graph1 size: {g1.Size}");
-                Console.WriteLine($"Graph2 size: {g2.Size}");
+                PrintSize(g1, g2);
             }
 
             if (options.Distance)
             {
-                var (elapsed, res) = TimeExecution(() => GraphDistance.Calculate(g1, g2));
-                Console.WriteLine($"Distance Graph1 <-> Graph2: {res:F5} | took  {elapsed.TotalMilliseconds:F5}ms");
+                PrintDistance(g1, g2);
             }
 
             var solver = CreateSubgraphSolver(options.SubAlgorithm);
@@ -119,6 +117,24 @@ public class Program
             "greedy-reuse" => new GreedyReuseExtensionStrategy(),
             _ => new ReuseVerticesExtensionStrategy(),
         };
+    }
+
+    private static void PrintSize(Graph graphA, Graph graphB)
+    {
+        Console.WriteLine($"Graph1 size: {graphA.Size} (|V| = {graphA.VertexCount}, |E| = {graphA.EdgeCount})");
+        Console.WriteLine($"Graph2 size: {graphB.Size} (|V| = {graphB.VertexCount}, |E| = {graphB.EdgeCount})");
+    }
+
+    private static void PrintDistance(Graph graphA, Graph graphB)
+    {
+        graphA.EdgesOn();
+        graphB.EdgesOn();
+        
+        var (elapsed, res) = TimeExecution(() => GraphDistance.Calculate(graphA, graphB));
+        Console.WriteLine($"Distance Graph1 <-> Graph2: {res:F5} | took {elapsed.TotalMilliseconds:F5}ms");
+        
+        graphA.EdgesOff();
+        graphB.EdgesOff();
     }
     
     private static (TimeSpan, T) TimeExecution<T>(Func<T> methodToRun)

@@ -5,6 +5,9 @@ internal class Graph
     public int VertexCount => adj.GetLength(0);
     public int EdgeCount { get; private set; }
     public int Size => VertexCount + EdgeCount;
+    
+    // no loops
+    public List<Edge>? Edges = null;
 
     public Graph(int[,] matrix)
     {
@@ -46,6 +49,27 @@ internal class Graph
     
     public int LoopCount(int vertex) => Get(vertex, vertex);
 
+    // on/off as might waste space later
+    public void EdgesOn()
+    {
+        Edges = [];
+        for (var i = 0; i < VertexCount; i++)
+        {
+            for (var j = 0; j < VertexCount; j++)
+            {
+                if (j != i)
+                {
+                    Edges.Add(new Edge(i, j, Get(i, j)));
+                }
+            }
+        }
+    }
+
+    public void EdgesOff()
+    {
+        Edges = null;
+    }
+    
     public IEnumerable<(int, int)> YieldOutNeighboursWithCount(int vertex)
     {
         for (var neighbour = 0; neighbour < VertexCount; neighbour++)
@@ -91,3 +115,5 @@ internal class Graph
         }
     }
 }
+
+internal record Edge(int From, int To, int Weight);

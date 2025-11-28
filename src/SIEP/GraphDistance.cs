@@ -3,7 +3,7 @@ internal static class GraphDistance
 {
     public static double Calculate(Graph graphA, Graph graphB)
     {
-        return WlKernelPseudometric(graphA, graphB);    
+        return WlKernelPseudometric(graphA, graphB);
     }
 
     private static double WlKernelPseudometric(Graph graphA, Graph graphB)
@@ -15,15 +15,17 @@ internal static class GraphDistance
         var kernelAtoB = featureA.CalculateKernel(featureB);
         
         // kernel to pseudometric formula
-        return Math.Sqrt(kernelAtoA + kernelBtoB - 2 * kernelAtoB);
+        return Math.Sqrt(2 - 2 * kernelAtoB / (Math.Sqrt(kernelAtoA * kernelBtoB)));
     }
 
     private static (WlFeatureMap, WlFeatureMap) MakeWlFeatureMaps(Graph graphA, Graph graphB, int iterations = 4)
     {
         var labelCap = GetLabelsCountCap(graphA, graphB, iterations);
+        var maxEdge = GetMaxEdge(graphA, graphB);
+        
         var hasher = new LabelHasher();
-        var featureA = new WlFeatureMap(graphA, labelCap, iterations + 1, hasher);
-        var featureB = new WlFeatureMap(graphB, labelCap, iterations + 1, hasher);
+        var featureA = new WlFeatureMap(graphA, labelCap, maxEdge, iterations + 1, hasher);
+        var featureB = new WlFeatureMap(graphB, labelCap, maxEdge, iterations + 1, hasher);
 
         for (var i = 0; i < iterations; i++)
         {
@@ -42,6 +44,23 @@ internal static class GraphDistance
         return max * graphCount * (iterations + 1);
     }
 
+    private static int GetMaxEdge(Graph graphA, Graph graphB)
+    {
+        var max = 0;
+        
+        foreach (var edge in graphA.Edges!)
+        {
+            max = Math.Max(max, edge.Weight);
+        }
+        
+        foreach (var edge in graphB.Edges!)
+        {
+            max = Math.Max(max, edge.Weight);
+        }
+        
+        return max;
+    }
+
     private static void WlSubtreeIteration(WlFeatureMap featureA, WlFeatureMap featureB, int iter)
     {
         featureA.OneIter(iter);
@@ -53,12 +72,19 @@ internal class WlFeatureMap
 {
     private readonly int[,] _featureMap;
     
-    private readonly LabelHasher _hasher;
     private readonly Graph _graph;
+    
+    private readonly LabelHasher _hasher;
+    private readonly LabelSorter _inSorter;
+    private readonly LabelSorter _outSorter;
+    
     private int[] _labelMap;
     private int[] _labelMapNext;
+
+    private readonly List<(int, int)>[] _inLabels;
+    private readonly List<(int, int)>[] _outLabels;
     
-    public WlFeatureMap(Graph graph, int labelCap, int depth, LabelHasher hasher)
+    public WlFeatureMap(Graph graph, int labelCap, int maxEdge, int depth, LabelHasher hasher)
     {
         _featureMap = new int[depth, labelCap];
         _hasher = hasher;
@@ -66,6 +92,12 @@ internal class WlFeatureMap
         
         _labelMap = new int[graph.VertexCount];
         _labelMapNext = new int[graph.VertexCount];
+        
+        _inSorter = new LabelSorter(labelCap, maxEdge);
+        _outSorter = new LabelSorter(labelCap, maxEdge);
+        
+        _inLabels = new List<(int, int)>[_graph.VertexCount];
+        _outLabels = new List<(int, int)>[_graph.VertexCount];
         
         InitLabelMap();
     }
@@ -83,31 +115,45 @@ internal class WlFeatureMap
     {
         var lvl = iter + 1;
         _labelMapNext = new int[_graph.VertexCount];
+        
+        ResetInOutLabels();
+        
+        _inSorter.Reset();
+        _outSorter.Reset();
+        
+        foreach (var edge in _graph.Edges!)
+        {
+            _inSorter.Add(_labelMap[edge.From], edge.Weight, edge.To);
+            _outSorter.Add(_labelMap[edge.To], edge.Weight, edge.From);
+        }
+
+        foreach (var elem in _inSorter.YieldSorted())
+        {
+            _inLabels[elem.owner].Add((elem.label, elem.count));
+        }
+        
+        foreach (var elem in _outSorter.YieldSorted())
+        {
+            _outLabels[elem.owner].Add((elem.label, elem.count));
+        }
 
         for (var vert = 0; vert < _graph.VertexCount; vert++)
         {
-            var head = _labelMap[vert];
-            
-            var outNeighbours = _graph
-                .YieldOutNeighboursWithCount(vert)
-                .Select(p => (_labelMap[p.Item1], p.Item2))
-                .OrderBy(p => p.Item1)
-                .ThenBy(p => p.Item2)
-                .ToArray();
-            
-            var inNeighbours = _graph
-                .YieldOutNeighboursWithCount(vert)
-                .Select(p => (_labelMap[p.Item1], p.Item2))
-                .OrderBy(p => p.Item1)
-                .ThenBy(p => p.Item2)
-                .ToArray();
-            
-            var label = _hasher.GetLabel(head, outNeighbours, inNeighbours);
+            var label = _hasher.GetLabel(_labelMap[vert], _outLabels[vert], _inLabels[vert]);
             _featureMap[lvl, label]++;
             _labelMapNext[vert] = label;
         }
         
         _labelMap = _labelMapNext;
+    }
+
+    private void ResetInOutLabels()
+    {
+        for (var vert = 0; vert < _graph.VertexCount; vert++)
+        {
+            _inLabels[vert] = [];
+            _outLabels[vert] = [];
+        }
     }
 
     public int CalculateKernel()
@@ -160,6 +206,41 @@ internal class LabelHasher
         _labels.Add(signature, value);
         
         return value;
+    }
+}
+
+internal class LabelSorter(int labelCap, int maxEdge)
+{
+    private readonly List<int>[,] _bucket = new List<int>[labelCap, maxEdge + 1];
+
+    public void Add(int label, int count, int owner)
+    {
+        _bucket[label, count].Add(owner);
+    }
+
+    public IEnumerable<(int label, int count, int owner)> YieldSorted()
+    {
+        for (var lab = 0; lab < _bucket.GetLength(0); lab++)
+        {
+            for (var cnt = 0; cnt < _bucket.GetLength(1); cnt++)
+            {
+                foreach (var owner in  _bucket[lab, cnt])
+                {
+                    yield return (lab, cnt, owner);
+                }
+            }
+        }
+    }
+
+    public void Reset()
+    {
+        for (var lab = 0; lab < _bucket.GetLength(0); lab++)
+        {
+            for (var cnt = 0; cnt < _bucket.GetLength(1); cnt++)
+            {
+                _bucket[lab, cnt] = [];
+            }
+        }
     }
 }
 

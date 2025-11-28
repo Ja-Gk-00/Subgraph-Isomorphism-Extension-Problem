@@ -143,7 +143,7 @@ internal class ArgParser
         Console.WriteLine("  --extend              Extend Graph2 to contain Graph1 if needed");
         Console.WriteLine("  --visualize           Produce DOT/PNG visualizations (assuming `check` is on)");
         Console.WriteLine("  --size                Calculate and print size of both input graphs (default: false)");
-        Console.WriteLine("  --distance            Calculate and print distance between input graphs (default: false)");
+        Console.WriteLine("  --distance            Calculate and print distance (WL kernel induced normalized pseudometric) between input graphs (default: false)");
         Console.WriteLine("  --subalgo <name>      Subgraph algorithm: ullmann | naive | deg");
         Console.WriteLine("  --extalgo <name>      Extension algorithm: reuse | simple");
         Console.WriteLine("  --extalgo <name>      Extension algorithm: reuse | simple");
