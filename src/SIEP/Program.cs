@@ -54,22 +54,22 @@ public class Program
 
             if (options.Extend)
             {
-                if (found)
-                {
-                    Console.WriteLine("No extension needed, Graph1 already a subgraph of Graph2.");
-                }
-                else
-                {
-                    var extended = extender.ExtendToInclude(g1, g2, out var addedVertices, out var addedEdges);
-                    Console.WriteLine($"Extended Graph2 with {addedVertices} vertices and {addedEdges} edges");
-                    Console.WriteLine("Extended adjacency matrix:");
-                    extended.PrintMatrix();
+                var extended = extender.ExtendToInclude(
+                    g1,
+                    g2,
+                    out var addedVertices,
+                    out var addedEdges);
 
-                    if (options.Visualize)
-                    {
-                        Console.WriteLine("[viz] Visualizing extended Graph2...");
-                        GraphVisualizer.Visualize(extended, "graph2_extended");
-                    }
+                Console.WriteLine("Extension result:");
+                Console.WriteLine($"Added vertices: {addedVertices}");
+                Console.WriteLine($"Added edges: {addedEdges}");
+                Console.WriteLine("Resulting graph adjacency matrix:");
+                extended.PrintMatrix();
+
+                if (options.Visualize)
+                {
+                    Console.WriteLine("[viz] Visualizing extended / target graph...");
+                    GraphVisualizer.Visualize(extended, "graph2_extended");
                 }
             }
         }
@@ -104,6 +104,9 @@ public class Program
             "reuse" => new ReuseVerticesExtensionStrategy(),
             "disjoint" => new DisjointCopyExtensionStrategy(),
             "greedy-reuse" => new GreedyReuseExtensionStrategy(),
+            "vf2-disjoint" => new VF2DisjointExtensionStrategy(),
+            "vf2-reuse" => new VF2ReuseExtensionStrategy(),
+            "tap" => new TreeAugmentationExtensionStrategy(),
             _ => new ReuseVerticesExtensionStrategy(),
         };
     }
