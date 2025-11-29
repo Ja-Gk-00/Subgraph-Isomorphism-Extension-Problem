@@ -4,9 +4,14 @@ using System.IO;
 
 internal record ParsedArgs(
     FileInfo InputFile,
+    
     bool Check,
     bool Extend,
     bool Visualize,
+    
+    bool Size,
+    bool Distance,
+    
     string SubAlgorithm,
     string ExtensionAlgorithm);
 
@@ -15,9 +20,14 @@ internal class ArgParser
     public ParsedArgs? Parse(string[] args)
     {
         string? inputPath = null;
+        
         bool check = false;
         bool extend = false;
         bool visualize = false;
+        
+        var size = false;
+        var distance = false;
+        
         string subAlgo = "ullmann";
         string extAlgo = "reuse";
 
@@ -35,7 +45,7 @@ internal class ArgParser
                     }
                     inputPath = args[++i];
                     break;
-
+                
                 case "--check":
                     check = true;
                     break;
@@ -46,6 +56,14 @@ internal class ArgParser
 
                 case "--visualize":
                     visualize = true;
+                    break;
+                
+                case "--size":
+                    size = true;
+                    break;
+                
+                case "--distance":
+                    distance = true;
                     break;
 
                 case "--subalgo":
@@ -85,29 +103,50 @@ internal class ArgParser
             return null;
         }
 
-        if (!check && !extend)
+        if (!check && extend)
         {
             check = true;
         }
 
+        if (!check && visualize)
+        {
+            Console.WriteLine("Cannot visualize - `check` flag required.");
+            PrintHelp();
+            return null;
+        }
+
+        if (!check && !extend && !size && !distance)
+        {
+            Console.WriteLine("At least one of `check`, `extend`, `size`, `distance` needs to be specified.");
+            PrintHelp();
+            return null;
+        }
+
         return new ParsedArgs(
-            new FileInfo(inputPath),
-            check,
-            extend,
-            visualize,
-            subAlgo,
-            extAlgo);
+            InputFile: new  FileInfo(inputPath),
+            
+            Check: check,
+            Extend: extend,
+            Visualize: visualize,
+            Size: size,
+            Distance: distance,
+            
+            SubAlgorithm: subAlgo,
+            ExtensionAlgorithm: extAlgo);
     }
 
-    private void PrintHelp()
+    private static void PrintHelp()
     {
         Console.WriteLine("Usage:");
-        Console.WriteLine("  --file <path>       Input file with two adjacency matrices");
-        Console.WriteLine("  --check             Run subgraph check");
-        Console.WriteLine("  --extend            Extend Graph2 to contain Graph1 if needed");
-        Console.WriteLine("  --visualize         Produce DOT/PNG visualizations");
-        Console.WriteLine("  --subalgo <name>    Subgraph algorithm: ullmann | naive | deg");
-        Console.WriteLine("  --extalgo <name>    Extension algorithm: reuse | simple");
-        Console.WriteLine("  --help, -h          Show this help");
+        Console.WriteLine("  -f, --file <path>     Input file with two adjacency matrices");
+        Console.WriteLine("  --check               Run subgraph check");
+        Console.WriteLine("  --extend              Extend Graph2 to contain Graph1 if needed");
+        Console.WriteLine("  --visualize           Produce DOT/PNG visualizations (assuming `check` is on)");
+        Console.WriteLine("  --size                Calculate and print size of both input graphs (default: false)");
+        Console.WriteLine("  --distance            Calculate and print distance (WL kernel induced normalized pseudometric) between input graphs (default: false)");
+        Console.WriteLine("  --subalgo <name>      Subgraph algorithm: ullmann | naive | deg");
+        Console.WriteLine("  --extalgo <name>      Extension algorithm: reuse | simple");
+        Console.WriteLine("  --extalgo <name>      Extension algorithm: reuse | simple");
+        Console.WriteLine("  --help, -h            Show this help");
     }
 }

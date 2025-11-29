@@ -1,4 +1,5 @@
-﻿using SIEP.ExtensionAlgorithms;
+﻿using System.Diagnostics;
+using SIEP.ExtensionAlgorithms;
 using SIEP.SubgraphAlgorithms;
 
 public class Program
@@ -15,64 +16,74 @@ public class Program
             var g1 = graphs[0];
             var g2 = graphs[1];
 
-            Console.WriteLine($"Graph1: {g1.VertexCount} vertices, {g1.EdgeCount} edges");
-            Console.WriteLine($"Graph2: {g2.VertexCount} vertices, {g2.EdgeCount} edges");
+            if (options.Size)
+            {
+                PrintSize(g1, g2);
+            }
+
+            if (options.Distance)
+            {
+                PrintDistance(g1, g2);
+            }
 
             var solver = CreateSubgraphSolver(options.SubAlgorithm);
             var extender = CreateExtensionStrategy(options.ExtensionAlgorithm);
 
-            Console.WriteLine($"Subgraph solver: {solver.Name}");
-            Console.WriteLine($"Extension strategy: {extender.Name}");
+            if (options.Check)
+                Console.WriteLine($"Subgraph solver: {solver.Name}");
 
-            var found = solver.TryFindSubgraph(g1, g2, out var mapping);
+            if (options.Extend)
+                Console.WriteLine($"Extension strategy: {extender.Name}");
 
             if (options.Check)
             {
+                var found = solver.TryFindSubgraph(g1, g2, out var mapping);
                 if (found)
                     Console.WriteLine("Graph1 is a subgraph of Graph2");
                 else
                     Console.WriteLine("Graph1 is NOT a subgraph of Graph2");
-            }
-
-            if (options.Visualize)
-            {
-                Console.WriteLine("[viz] Visualizing Graph1...");
-                GraphVisualizer.Visualize(g1, "graph1");
-
-                if (found)
-                {
-                    var highlight = new HashSet<int>(mapping.Values);
-                    Console.WriteLine("[viz] Visualizing Graph2 with highlight...");
-                    GraphVisualizer.Visualize(g2, "graph2", highlight);
-                }
-                else
-                {
-                    Console.WriteLine("[viz] Visualizing Graph2...");
-                    GraphVisualizer.Visualize(g2, "graph2");
-                }
-            }
-
-            if (options.Extend)
-            {
-                var extended = extender.ExtendToInclude(
-                    g1,
-                    g2,
-                    out var addedVertices,
-                    out var addedEdges);
-
-                Console.WriteLine("Extension result:");
-                Console.WriteLine($"Added vertices: {addedVertices}");
-                Console.WriteLine($"Added edges: {addedEdges}");
-                Console.WriteLine("Resulting graph adjacency matrix:");
-                extended.PrintMatrix();
 
                 if (options.Visualize)
                 {
-                    Console.WriteLine("[viz] Visualizing extended / target graph...");
-                    GraphVisualizer.Visualize(extended, "graph2_extended");
+                    Console.WriteLine("[viz] Visualizing Graph1...");
+                    GraphVisualizer.Visualize(g1, "graph1");
+
+                    if (found)
+                    {
+                        var highlight = new HashSet<int>(mapping.Values);
+                        Console.WriteLine("[viz] Visualizing Graph2 with highlight...");
+                        GraphVisualizer.Visualize(g2, "graph2", highlight);
+                    }
+                    else
+                    {
+                        Console.WriteLine("[viz] Visualizing Graph2...");
+                        GraphVisualizer.Visualize(g2, "graph2");
+                    }
+                }
+
+                if (options.Extend)
+                {
+                    var extended = extender.ExtendToInclude(
+                        g1,
+                        g2,
+                        out var addedVertices,
+                        out var addedEdges);
+
+                    Console.WriteLine("Extension result:");
+                    Console.WriteLine($"Added vertices: {addedVertices}");
+                    Console.WriteLine($"Added edges (multiplicity units): {addedEdges}");
+                    Console.WriteLine("Resulting graph adjacency matrix:");
+                    extended.PrintMatrix();
+
+                    if (options.Visualize)
+                    {
+                        Console.WriteLine("[viz] Visualizing extended / target graph...");
+                        GraphVisualizer.Visualize(extended, "graph2_extended");
+                    }
                 }
             }
         }
+
         catch (SIEPException ex)
         {
             Console.WriteLine($"[ERROR]: {ex.Message}");
@@ -109,5 +120,32 @@ public class Program
             "tap" => new TreeAugmentationExtensionStrategy(),
             _ => new ReuseVerticesExtensionStrategy(),
         };
+    }
+
+    private static void PrintSize(Graph graphA, Graph graphB)
+    {
+        Console.WriteLine($"Graph1 size: {graphA.Size} (|V| = {graphA.VertexCount}, |E| = {graphA.EdgeCount})");
+        Console.WriteLine($"Graph2 size: {graphB.Size} (|V| = {graphB.VertexCount}, |E| = {graphB.EdgeCount})");
+    }
+
+    private static void PrintDistance(Graph graphA, Graph graphB)
+    {
+        graphA.EdgesOn();
+        graphB.EdgesOn();
+        
+        var (elapsed, res) = TimeExecution(() => GraphDistance.Calculate(graphA, graphB));
+        Console.WriteLine($"Distance Graph1 <-> Graph2: {res:F5} | took {elapsed.TotalMilliseconds:F5}ms");
+        
+        graphA.EdgesOff();
+        graphB.EdgesOff();
+    }
+    
+    private static (TimeSpan, T) TimeExecution<T>(Func<T> methodToRun)
+    {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        var res = methodToRun.Invoke();
+        stopwatch.Stop();
+        return (stopwatch.Elapsed, res);
     }
 }
