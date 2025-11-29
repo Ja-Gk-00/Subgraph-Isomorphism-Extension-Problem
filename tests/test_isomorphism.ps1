@@ -3,7 +3,7 @@ $GeneratorPath = ".\file-generator.exe"
 $SolverPath = ".\siep.exe"
 $DataDir = ".\data\iso"
 $ResultsFile = "results\isomorphism.csv"
-$Seeds = 10, 20, 30
+$Seeds = 10
 
 # --- Directory Setup ---
 if (!(Test-Path $DataDir)) { 
