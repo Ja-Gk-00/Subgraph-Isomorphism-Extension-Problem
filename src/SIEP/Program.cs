@@ -124,6 +124,7 @@ public class Program
             "vf2-reuse" => new VF2ReuseExtensionStrategy(),
             "tap" => new TreeAugmentationExtensionStrategy(),
             "lerp" => new LeRPExtensionStrategy(),
+            "ullmann" => new UllmannExtensionStrategy(),
             _ => new ReuseVerticesExtensionStrategy(),
         };
     }

@@ -8,24 +8,11 @@ internal sealed class TreeAugmentationExtensionStrategy : IGraphExtensionStrateg
 
     public Graph ExtendToInclude(Graph pattern, Graph target, out int addedVertices, out int addedEdges)
     {
-        var vf2 = new VF2SubgraphMatcher(pattern, target);
-        if (vf2.TryFindMapping(out var mapping))
-        {
-            GraphExtensionUtils.ComputeExtensionFromPatternToTarget(
-                pattern, target, mapping, out addedVertices, out addedEdges);
-
-            return target;
-        }
-
-        var baseStrategy = new GreedyReuseExtensionStrategy();
-        var baseGraph = baseStrategy.ExtendToInclude(
-            pattern, target, out var baseAddedVertices, out var baseAddedEdges);
-
-        var augmented = baseGraph.Clone();
+        var augmented = target.Clone();
         int tapAddedEdges = RunTreeAugmentation(augmented);
 
-        addedVertices = baseAddedVertices;
-        addedEdges = baseAddedEdges + tapAddedEdges;
+        addedVertices = 0;
+        addedEdges = tapAddedEdges;
 
         return augmented;
     }
