@@ -15,10 +15,12 @@ if (!(Test-Path $ResultsDir)) {
 }
 
 # --- Initialize CSV ---
-"Algorithm,Size_N,Avg_Time_ms" | Out-File $ResultsFile -Encoding utf8
+# Zmieniono nagłówek - dodano Est_Edges
+"Algorithm,Size_N,Est_Edges,Avg_Time_ms" | Out-File $ResultsFile -Encoding utf8
 
 # --- Test Parameters ---
-$GraphSizes = 5, 6, 7, 8, 9, 10, 11, 12
+$GraphSizes = 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+$Density = 0.4
 
 Write-Host "Starting Exact Extension Tests (Simple/Reuse + Ullmann)..." -ForegroundColor Cyan
 
@@ -28,11 +30,14 @@ foreach ($n in $GraphSizes) {
     $filename = "ext_exact_n${n}.txt"
     $filepath = Join-Path $DataDir $filename
 
-    Write-Host "  Processing Size N=$n" -NoNewline
+    # Obliczanie szacowanej liczby krawędzi (E)
+    $estEdges = [Math]::Floor($Density * ($n * ($n - 1)) / 2)
+
+    Write-Host "  Processing Size N=$n (E~$estEdges)" -NoNewline
 
     foreach ($seed in $Seeds) {
         # Generate RANDOM graphs
-        & $GeneratorPath $n $n --output $filepath --density 0.4 --seed $seed | Out-Null
+        & $GeneratorPath $n $n --output $filepath --density $Density --seed $seed | Out-Null
 
         # 1. Simple Strategy (with Exact Check)
         $t1 = Measure-Command {
@@ -53,9 +58,9 @@ foreach ($n in $GraphSizes) {
     $avgSimple = $totalSimple / $Seeds.Count
     $avgReuse = $totalReuse / $Seeds.Count
 
-    # Log results
-    "Simple+Ullmann,$n,$avgSimple" | Out-File $ResultsFile -Append -Encoding utf8
-    "Reuse+Ullmann,$n,$avgReuse" | Out-File $ResultsFile -Append -Encoding utf8
+    # Log results (Dodano $estEdges)
+    "Simple+Ullmann,$n,$estEdges,$avgSimple" | Out-File $ResultsFile -Append -Encoding utf8
+    "Reuse+Ullmann,$n,$estEdges,$avgReuse" | Out-File $ResultsFile -Append -Encoding utf8
 
     Write-Host " Done. Simple: $("{0:N0}" -f $avgSimple)ms | Reuse: $("{0:N0}" -f $avgReuse)ms" -ForegroundColor Green
 }

@@ -1,8 +1,8 @@
 # --- Configuration ---
 $GeneratorPath = ".\file-generator.exe"
 $SolverPath = ".\siep.exe"
-$DataDir = ".\data\ext_exact"
-$ResultsFile = "results\extension_exact.csv"
+$DataDir = ".\data\ext_multi_exact"
+$ResultsFile = "results\extension_multigraph_exact.csv"
 $Seeds = 10, 50
 
 # --- Directory Setup ---
@@ -15,11 +15,13 @@ if (!(Test-Path $ResultsDir)) {
 }
 
 # --- Initialize CSV ---
-"Algorithm,Size_N,Avg_Time_ms" | Out-File $ResultsFile -Encoding utf8
+# Dodano kolumnę Est_Edges
+"Algorithm,Size_N,Est_Edges,Max_Weight,Avg_Time_ms" | Out-File $ResultsFile -Encoding utf8
 
 # --- Test Parameters ---
-$GraphSizes = 5, 6, 7, 8, 9, 10, 11, 12
+$GraphSizes = 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
 $MaxWeight = 5
+$Density = 0.4
 
 Write-Host "Starting Exact Extension Tests (Simple/Reuse + Ullmann)..." -ForegroundColor Cyan
 
@@ -29,11 +31,14 @@ foreach ($n in $GraphSizes) {
     $filename = "ext_exact_n${n}.txt"
     $filepath = Join-Path $DataDir $filename
 
-    Write-Host "  Processing Size N=$n (W=$MaxWeight)" -NoNewline
+    # Obliczanie szacowanej liczby krawędzi (E)
+    $estEdges = [Math]::Floor($Density * ($n * ($n - 1)) / 2)
+
+    Write-Host "  Processing Size N=$n (E~$estEdges, W=$MaxWeight)" -NoNewline
 
     foreach ($seed in $Seeds) {
         # Generate RANDOM graphs
-        & $GeneratorPath $n $n --output $filepath --max-weight $MaxWeight --allow-loops --density 0.4 --seed $seed | Out-Null
+        & $GeneratorPath $n $n --output $filepath --max-weight $MaxWeight --allow-loops --density $Density --seed $seed | Out-Null
 
         # 1. Simple Strategy (with Exact Check)
         $t1 = Measure-Command {
@@ -54,9 +59,9 @@ foreach ($n in $GraphSizes) {
     $avgSimple = $totalSimple / $Seeds.Count
     $avgReuse = $totalReuse / $Seeds.Count
 
-    # Log results
-    "Simple+Ullmann,$n,$avgSimple" | Out-File $ResultsFile -Append -Encoding utf8
-    "Reuse+Ullmann,$n,$avgReuse" | Out-File $ResultsFile -Append -Encoding utf8
+    # Log results (Dodano $estEdges)
+    "Simple+Ullmann,$n,$estEdges,$MaxWeight,$avgSimple" | Out-File $ResultsFile -Append -Encoding utf8
+    "Reuse+Ullmann,$n,$estEdges,$MaxWeight,$avgReuse" | Out-File $ResultsFile -Append -Encoding utf8
 
     Write-Host " Done. Simple: $("{0:N0}" -f $avgSimple)ms | Reuse: $("{0:N0}" -f $avgReuse)ms" -ForegroundColor Green
 }
