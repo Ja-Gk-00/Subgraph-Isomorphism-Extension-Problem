@@ -103,18 +103,6 @@ internal class ArgParser
             return null;
         }
 
-        if (!check && extend)
-        {
-            check = true;
-        }
-
-        if (!check && visualize)
-        {
-            Console.WriteLine("Cannot visualize - `check` flag required.");
-            PrintHelp();
-            return null;
-        }
-
         if (!check && !extend && !size && !distance)
         {
             Console.WriteLine("At least one of `check`, `extend`, `size`, `distance` needs to be specified.");
