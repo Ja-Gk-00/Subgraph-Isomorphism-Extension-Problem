@@ -13,7 +13,6 @@ if (!(Test-Path $ResultsDir)) {
 }
 
 # --- Initialize CSV ---
-# Added Est_Edges column
 "Algorithm,Size_N,Est_Edges,Avg_Time_ms" | Out-File $ResultsFile -Encoding utf8
 
 # --- Test Parameters ---

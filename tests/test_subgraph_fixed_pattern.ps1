@@ -11,7 +11,6 @@ $ResultsDir = [System.IO.Path]::GetDirectoryName($ResultsFile)
 if (!(Test-Path $ResultsDir)) { New-Item -ItemType Directory -Path $ResultsDir -Force | Out-Null }
 
 # --- Initialize CSV ---
-# Added Est_Edges_Target column
 "Algorithm,Pattern_N1,Target_N2,Est_Edges_Target,Avg_Time_ms" | Out-File $ResultsFile -Encoding utf8
 
 # --- Test Parameters ---
