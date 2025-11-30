@@ -102,6 +102,8 @@ public class Program
             "naive" => new NaiveSubgraphSolver(),
             "deg" => new DegreeOrderedSubgraphSolver(),
             "degree" => new DegreeOrderedSubgraphSolver(),
+            "vf2" => new VF2SubgraphSolver(),
+            "lerp" => new LeRPSubgraphSolver(),
             _ => new UllmannSubgraphSolver(),
         };
     }
@@ -118,6 +120,7 @@ public class Program
             "vf2-disjoint" => new VF2DisjointExtensionStrategy(),
             "vf2-reuse" => new VF2ReuseExtensionStrategy(),
             "tap" => new TreeAugmentationExtensionStrategy(),
+            "lerp" => new LeRPExtensionStrategy(),
             _ => new ReuseVerticesExtensionStrategy(),
         };
     }
