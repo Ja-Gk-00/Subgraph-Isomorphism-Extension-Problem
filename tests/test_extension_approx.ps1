@@ -47,7 +47,7 @@ foreach ($n in $GraphSizes) {
 
         # 2. FV2 Strategy
         $t2 = Measure-Command {
-            & $SolverPath --file $filepath --extend --extalgo fv2 --subalgo deg | Out-Null
+            & $SolverPath --file $filepath --extend --extalgo fv2-disjoint --subalgo deg | Out-Null
         }
         $totalFV2 += $t2.TotalMilliseconds
         
