@@ -482,3 +482,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# tests
+tests/data/
+tests/results/
+tests/*.exe
