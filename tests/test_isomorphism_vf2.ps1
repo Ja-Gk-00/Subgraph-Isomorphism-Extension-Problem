@@ -1,8 +1,8 @@
 # --- Configuration ---
 $GeneratorPath = ".\file-generator.exe"
 $SolverPath = ".\siep.exe"
-$DataDir = ".\data\iso"
-$ResultsFile = "results\isomorphism.csv"
+$DataDir = ".\data\iso_vf2"
+$ResultsFile = "results\isomorphism_vf2.csv"
 $Seeds = 10
 
 # --- Directory Setup ---
@@ -18,10 +18,11 @@ if (!(Test-Path $ResultsDir)) {
 "Algorithm,Size_N,Est_Edges,Avg_Time_ms" | Out-File $ResultsFile -Encoding utf8
 
 # --- Test Parameters ---
-$GraphSizes = 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22
+$GraphSizes = 100, 200, 500, 1000, 2000, 5000, 6000
 $Density = 0.6
+$MaxWeight = 5
 
-Write-Host "Starting Exact Isomorphism Tests..." -ForegroundColor Cyan
+Write-Host "Starting Exact Isomorphism VF2 Tests..." -ForegroundColor Cyan
 
 foreach ($n in $GraphSizes) {
     $totalNaive = 0
@@ -31,33 +32,13 @@ foreach ($n in $GraphSizes) {
     $filepath = Join-Path $DataDir $filename
 
     # Calculate estimated edges: 0.6 * N * (N-1) / 2
-    $estEdges = [Math]::Floor($Density * ($n * ($n - 1)) / 2)
+    $estEdges = [Math]::Floor($Density * $MaxWeight * ($n * ($n - 1)) / 2)
 
     Write-Host "  Processing Size N=$n (E~$estEdges)" -NoNewline
 
     foreach ($seed in $Seeds) {
         # Generate ISOMORPHIC graphs (worst-case scenario)
-        & $GeneratorPath $n $n --isomorphic --output $filepath --density $Density --seed $seed | Out-Null
-        
-        # 1. Naive (Brute-force)
-        if ($n -le 12) {
-            $t1 = Measure-Command { & $SolverPath --file $filepath --check --subalgo naive | Out-Null }
-            $totalNaive += $t1.TotalMilliseconds
-        } else {
-            # naive only for n <= 12 due to factorial time complexity
-            $totalNaive += 0 
-        }
-
-        # 2. Ullmann
-        if ($n -le 18) {
-            $t2 = Measure-Command {
-            & $SolverPath --file $filepath --check --subalgo ullmann | Out-Null
-        }
-            $totalUllmann += $t2.TotalMilliseconds
-        } else {
-            # ullmann only for n <= 18 due to exponential time complexity
-            $totalUllmann += 0
-        }
+        & $GeneratorPath $n $n --isomorphic --allow-loops --max-weight $MaxWeight --output $filepath --density $Density --seed $seed | Out-Null
 
         # 3. VF2
         $t3 = Measure-Command {
@@ -73,11 +54,9 @@ foreach ($n in $GraphSizes) {
     $avgVF2 = $totalVF2 / $Seeds.Count
 
     # Log results with Edge Count
-    "Naive,$n,$estEdges,$avgNaive" | Out-File $ResultsFile -Append -Encoding utf8
-    "Ullmann,$n,$estEdges,$avgUllmann" | Out-File $ResultsFile -Append -Encoding utf8
     "FV2,$n,$estEdges,$avgVF2" | Out-File $ResultsFile -Append -Encoding utf8
 
-    Write-Host " Done. Naive: $("{0:N0}" -f $avgNaive)ms | Ullmann: $("{0:N0}" -f $avgUllmann)ms | VF2: $("{0:N0}" -f $avgVF2)ms" -ForegroundColor Green
+    Write-Host " Done. VF2: $("{0:N0}" -f $avgVF2)ms" -ForegroundColor Green
 }
 
 Write-Host "`nTest complete." -ForegroundColor Cyan
