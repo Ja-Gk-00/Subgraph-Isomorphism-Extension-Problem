@@ -16,11 +16,13 @@ if (!(Test-Path $ResultsDir)) {
 }
 
 # --- Initialize CSV ---
-"Algorithm,Size_N,Max_Weight,Avg_Time_ms" | Out-File $ResultsFile -Encoding utf8
+# Added Est_Edges column
+"Algorithm,Size_N,Est_Edges,Max_Weight,Avg_Time_ms" | Out-File $ResultsFile -Encoding utf8
 
 # --- Test Parameters ---
 $GraphSizes = 100, 500, 1000, 2000
 $Weights = 1, 5, 10 # 1 = simple graph, >1 = multigraph
+$Density = 0.4
 
 Write-Host "Starting Multigraph Metric Tests..." -ForegroundColor Cyan
 
@@ -32,11 +34,14 @@ foreach ($w in $Weights) {
         $filename = "multi_n${n}_w${w}.txt"
         $filepath = Join-Path $DataDir $filename
 
-        Write-Host "  Processing Size N=$n" -NoNewline
+        # Calculate estimated edges: 0.4 * N * (N-1) / 2
+        $estEdges = [Math]::Floor($Density * ($n * ($n - 1)) / 2)
+
+        Write-Host "  Processing Size N=$n (E~$estEdges)" -NoNewline
 
         foreach ($seed in $Seeds) {
             # Generate multigraph
-            & $GeneratorPath $n $n --output $filepath --density 0.4 --max-weight $w --allow-loops --seed $seed | Out-Null
+            & $GeneratorPath $n $n --output $filepath --density $Density --max-weight $w --allow-loops --seed $seed | Out-Null
             
             # Measure time
             $time = Measure-Command {
@@ -47,7 +52,9 @@ foreach ($w in $Weights) {
         }
 
         $avgTime = $totalTime / $Seeds.Count
-        "WL_Kernel,$n,$w,$avgTime" | Out-File $ResultsFile -Append -Encoding utf8
+        
+        # Log result with Est_Edges
+        "WL_Kernel,$n,$estEdges,$w,$avgTime" | Out-File $ResultsFile -Append -Encoding utf8
         
         Write-Host " Avg: $("{0:N2}" -f $avgTime) ms" -ForegroundColor Green
     }

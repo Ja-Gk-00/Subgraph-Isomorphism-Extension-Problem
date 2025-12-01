@@ -486,4 +486,5 @@ $RECYCLE.BIN/
 # tests
 tests/data/
 tests/results/
+tests/plots/
 tests/*.exe
