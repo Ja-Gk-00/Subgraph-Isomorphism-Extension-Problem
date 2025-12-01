@@ -22,12 +22,9 @@ internal sealed class UllmannExtensionStrategy : IGraphExtensionStrategy
             return target;
         }
 
-        if (n1 > n2)
-            throw new SIEPException("UllmannExtensionStrategy: pattern has more vertices than target");
-
         var matcher = new UllmannMatcher(pattern, target);
-        if (!matcher.TryFindMapping(out var mapping))
-            throw new SIEPException("UllmannExtensionStrategy: pattern is not a subgraph of target;");
+
+        matcher.TryFindMapping(out var mapping);
 
         GraphExtensionUtils.ComputeExtensionFromPatternToTarget(
             pattern,
@@ -94,6 +91,7 @@ internal sealed class UllmannExtensionStrategy : IGraphExtensionStrategy
                     for (int j = 0; j < n2; j++)
                     {
                         if (!M[i, j]) continue;
+
                         bool rowOk = true;
 
                         for (int ip = 0; ip < n1 && rowOk; ip++)
@@ -130,23 +128,7 @@ internal sealed class UllmannExtensionStrategy : IGraphExtensionStrategy
         {
             mapping = new Dictionary<int, int>();
 
-            for (int i = 0; i < n1; i++)
-            {
-                bool any = false;
-                for (int j = 0; j < n2; j++)
-                {
-                    if (M[i, j])
-                    {
-                        any = true;
-                        break;
-                    }
-                }
-                if (!any)
-                    return false;
-            }
-
-            if (!Search(0))
-                return false;
+            Search(0);
 
             for (int i = 0; i < n1; i++)
             {
@@ -155,16 +137,18 @@ internal sealed class UllmannExtensionStrategy : IGraphExtensionStrategy
                     mapping[i] = t;
             }
 
-            return mapping.Count == n1;
+            return mapping.Count > 0;
         }
 
         private bool Search(int depth)
         {
             if (depth == n1)
-                return VerifyMapping();
+                return true;
 
             int row = SelectNextRow();
             if (row < 0) return false;
+
+            bool anySuccess = false;
 
             for (int j = 0; j < n2; j++)
             {
@@ -177,13 +161,13 @@ internal sealed class UllmannExtensionStrategy : IGraphExtensionStrategy
                 mapP2T[row] = j;
 
                 if (Search(depth + 1))
-                    return true;
+                    anySuccess = true;
 
                 mapP2T[row] = -1;
                 usedT[j] = false;
             }
 
-            return false;
+            return anySuccess;
         }
 
         private int SelectNextRow()
@@ -202,7 +186,7 @@ internal sealed class UllmannExtensionStrategy : IGraphExtensionStrategy
                 }
 
                 if (count == 0)
-                    return -1;
+                    continue;
 
                 if (count < bestCount)
                 {
@@ -225,33 +209,6 @@ internal sealed class UllmannExtensionStrategy : IGraphExtensionStrategy
                 if (wP > 0)
                 {
                     int wT = target.Get(j, tj);
-                    if (wT < wP)
-                        return false;
-                }
-            }
-
-            return true;
-        }
-
-        private bool VerifyMapping()
-        {
-            for (int i = 0; i < n1; i++)
-            {
-                if (mapP2T[i] < 0)
-                    return false;
-            }
-
-            for (int i = 0; i < n1; i++)
-            {
-                for (int j = i; j < n1; j++)
-                {
-                    int wP = pattern.Get(i, j);
-                    if (wP <= 0) continue;
-
-                    int ti = mapP2T[i];
-                    int tj = mapP2T[j];
-
-                    int wT = target.Get(ti, tj);
                     if (wT < wP)
                         return false;
                 }
