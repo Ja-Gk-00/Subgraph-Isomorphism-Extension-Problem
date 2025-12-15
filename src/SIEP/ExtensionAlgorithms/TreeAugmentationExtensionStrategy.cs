@@ -8,13 +8,49 @@ internal sealed class TreeAugmentationExtensionStrategy : IGraphExtensionStrateg
 
     public Graph ExtendToInclude(Graph pattern, Graph target, out int addedVertices, out int addedEdges)
     {
-        var augmented = target.Clone();
-        int tapAddedEdges = RunTreeAugmentation(augmented);
+        if (pattern.VertexCount > target.VertexCount)
+            throw new SIEPException("TreeAugmentationExtensionStrategy: pattern has more vertices than target");
 
-        addedVertices = 0;
-        addedEdges = tapAddedEdges;
+        int nT = target.VertexCount;
+        int nP = pattern.VertexCount;
 
-        return augmented;
+        var diffMatrix = new int[nT, nT];
+        for (int i = 0; i < nT; i++)
+        {
+            for (int j = 0; j < nT; j++)
+            {
+                int t = target.Get(i, j);
+                int p = (i < nP && j < nP) ? pattern.Get(i, j) : 0;
+                int d = t - p;
+                if (d > 0)
+                    diffMatrix[i, j] = d;
+            }
+        }
+
+        var extension = new Graph(diffMatrix);
+        int tapAddedEdges = RunTreeAugmentation(extension);
+
+        int size = nT;
+        var finalMatrix = new int[size, size];
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                int val = 0;
+                if (i < nP && j < nP)
+                    val += pattern.Get(i, j);
+                val += extension.Get(i, j);
+                if (val > 0)
+                    finalMatrix[i, j] = val;
+            }
+        }
+
+        var finalGraph = new Graph(finalMatrix);
+
+        addedVertices = finalGraph.VertexCount - target.VertexCount;
+        addedEdges = finalGraph.EdgeCount - target.EdgeCount;
+
+        return finalGraph;
     }
 
     private int RunTreeAugmentation(Graph g)
